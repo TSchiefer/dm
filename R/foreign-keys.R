@@ -24,7 +24,7 @@ cdm_add_fk <- function(dm, table, column, ref_table, check = TRUE) h(~ {
     if (!cdm_has_pk(dm, !!ref_table_name)) {
       abort_ref_tbl_has_no_pk(
         ref_table_name,
-        cdm_check_for_pk_candidates(dm, !!ref_table_name) %>%
+        cdm_enum_pk_candidates(dm, !!ref_table_name) %>%
           filter(candidate == TRUE) %>%
           pull(column)
       )
@@ -186,15 +186,16 @@ cdm_rm_fk <- function(dm, table, column, ref_table) {
     )
   }
 
-  dm$data_model <-
+  new_dm(
+    cdm_get_src(dm),
+    cdm_get_tables(dm),
     rm_data_model_reference(
       cdm_get_data_model(dm),
       table_name,
       col_names,
       ref_table_name
     )
-
-  dm
+  )
 }
 
 #' Find foreign key candidates in a table
@@ -204,7 +205,7 @@ cdm_rm_fk <- function(dm, table, column, ref_table) {
 #' @param ref_table A table with a primary key.
 #'
 #' @description Which columns are foreign candidates of a table, referencing the primary key column of another [`dm`] object's table?
-#' `cdm_check_for_fk_candidates()` checks first, if `ref_table` has a primary key set. Then it determines
+#' `cdm_enum_fk_candidates()` checks first, if `ref_table` has a primary key set. Then it determines
 #' for each column of `table`, if this column contains only a subset of values of the primary key column of
 #' `ref_table` and is therefore a candidate for a foreign key from `table` to `ref_table`.
 #'
@@ -213,53 +214,43 @@ cdm_rm_fk <- function(dm, table, column, ref_table) {
 #' @examples
 #' library(dplyr)
 #'
-#' nycflights_dm <- cdm_nycflights13()
+#' nycflights_dm <- cdm_nycflights13(cycle = TRUE)
 #'
 #' nycflights_dm %>%
-#'   cdm_check_for_fk_candidates(flights, airports)
+#'   cdm_enum_fk_candidates(flights, airports)
 #' @export
-cdm_check_for_fk_candidates <- function(dm, table, ref_table) h(~ {
-    table_name <- as_name(enquo(table))
-    ref_table_name <- as_name(enquo(ref_table))
+cdm_enum_fk_candidates <- function(dm, table, ref_table) h(~ {
+  table_name <- as_name(enquo(table))
+  ref_table_name <- as_name(enquo(ref_table))
 
-    check_correct_input(dm, table_name)
-    check_correct_input(dm, ref_table_name)
+  check_correct_input(dm, table_name)
+  check_correct_input(dm, ref_table_name)
 
-    if (!cdm_has_pk(dm, !!ref_table_name)) {
-      abort_ref_tbl_has_no_pk(
-        ref_table_name,
-        cdm_check_for_pk_candidates(dm, !!ref_table_name) %>%
-          filter(candidate == TRUE) %>%
-          pull(column)
-      )
-    }
-
-    tbl <- cdm_get_tables(dm)[[table_name]]
-    tbl_colnames <- colnames(tbl)
-
-    ref_tbl <- cdm_get_tables(dm)[[ref_table_name]]
-    ref_tbl_pk <- cdm_get_pk(dm, !!ref_table_name)
-
-    map_dfr(
-      tbl_colnames,
-      ~ {
-        if (is_subset(tbl, !!.x, ref_tbl, !!ref_tbl_pk)) {
-          tibble(
-            candidate = TRUE,
-            column = .x,
-            table = table_name,
-            ref_table = ref_table_name,
-            ref_table_pk = ref_tbl_pk
-          )
-        } else {
-          tibble(
-            candidate = FALSE,
-            column = .x,
-            table = table_name,
-            ref_table = ref_table_name,
-            ref_table_pk = ref_tbl_pk
-          )
-        }
-      }
+  if (!cdm_has_pk(dm, !!ref_table_name)) {
+    abort_ref_tbl_has_no_pk(
+      ref_table_name,
+      cdm_enum_pk_candidates(dm, !!ref_table_name) %>%
+        filter(candidate == TRUE) %>%
+        pull(column)
     )
-  })
+  }
+
+  tbl <- cdm_get_tables(dm)[[table_name]]
+  tbl_colnames <- colnames(tbl)
+
+  ref_tbl <- cdm_get_tables(dm)[[ref_table_name]]
+  ref_tbl_pk <- cdm_get_pk(dm, !!ref_table_name)
+
+  subsets <- map_lgl(
+    tbl_colnames,
+    ~ is_subset(tbl, !!.x, ref_tbl, !!ref_tbl_pk)
+  )
+
+  tibble(
+    ref_table = ref_table_name,
+    ref_table_pk = ref_tbl_pk,
+    table = table_name,
+    column = tbl_colnames,
+    candidate = subsets
+  )
+})

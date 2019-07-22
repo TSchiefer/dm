@@ -5,15 +5,15 @@
 #' since this should only be seen as a quick way of getting a [`dm`] with known tables to
 #' play around with).
 #'
-#' @param cycle Boolean, if `FALSE`, only one foreign key relation
+#' @param cycle Boolean. If `FALSE` (default), only one foreign key relation
 #'   (from `flights$origin` to `airports$faa`) between `flights` and `airports` is
-#'   established. If `TRUE` (default), a `dm` object with a double reference
+#'   established. If `TRUE`, a `dm` object with a double reference
 #'   between those tables will be produced.
 #' @param color Boolean, if `TRUE` (default), the resulting `dm` object will have
 #'   colors assigned to different tables for visualization with `cdm_draw()`
 #'
 #' @export
-cdm_nycflights13 <- function(cycle = TRUE, color = TRUE) h(~ {
+cdm_nycflights13 <- function(cycle = FALSE, color = TRUE) h(~ {
     dm <-
       dm(
         src_df("nycflights13")

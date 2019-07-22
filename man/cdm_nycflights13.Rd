@@ -4,12 +4,12 @@
 \alias{cdm_nycflights13}
 \title{Creates a test \code{\link{dm}} object from \pkg{nycflights13}}
 \usage{
-cdm_nycflights13(cycle = TRUE, color = TRUE)
+cdm_nycflights13(cycle = FALSE, color = TRUE)
 }
 \arguments{
-\item{cycle}{Boolean, if \code{FALSE}, only one foreign key relation
+\item{cycle}{Boolean. If \code{FALSE} (default), only one foreign key relation
 (from \code{flights$origin} to \code{airports$faa}) between \code{flights} and \code{airports} is
-established. If \code{TRUE} (default), a \code{dm} object with a double reference
+established. If \code{TRUE}, a \code{dm} object with a double reference
 between those tables will be produced.}
 
 \item{color}{Boolean, if \code{TRUE} (default), the resulting \code{dm} object will have

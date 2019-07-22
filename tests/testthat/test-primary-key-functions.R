@@ -121,23 +121,25 @@ test_that("cdm_get_pk() works as intended?", {
   )
 })
 
-test_that("cdm_check_for_pk_candidates() works properly?", {
-  candidates_table_1 <- tibble(candidate = c(TRUE, TRUE), column = c("a", "b"))
-  candidates_table_2 <- tibble(candidate = c(FALSE), column = c("c"))
+test_that("cdm_enum_pk_candidates() works properly?", {
+  candidates_table_1 <- tibble(column = c("a", "b"), candidate = c(TRUE, TRUE))
+  candidates_table_2 <- tibble(column = c("c"), candidate = c(FALSE))
 
-  map(
+  iwalk(
     cdm_test_obj_src,
     ~ expect_identical(
-      cdm_check_for_pk_candidates(.x, cdm_table_1),
-      candidates_table_1
+      cdm_enum_pk_candidates(.x, cdm_table_1),
+      candidates_table_1,
+      label = .y
     )
   )
 
-  map(
+  iwalk(
     cdm_test_obj_src,
     ~ expect_identical(
-      cdm_check_for_pk_candidates(.x, cdm_table_2),
-      candidates_table_2
+      cdm_enum_pk_candidates(.x, cdm_table_2),
+      candidates_table_2,
+      label = .y
     )
   )
 })

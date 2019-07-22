@@ -8,7 +8,7 @@
 # dbplyr::test_register_src("df", dplyr::src_df(env = new.env()))
 # dbplyr::test_register_src("sqlite", dplyr::src_sqlite(":memory:", create = TRUE))
 #
-# cdm_test_obj <- cdm_nycflights13()
+# cdm_test_obj <- cdm_nycflights13(cycle = TRUE)
 # cdm_test_obj_srcs <- cdm_test_load(cdm_test_obj)
 cdm_test_load <- function(x,
                           db_names = NULL, # NULL results in the same name on the src for each table as the current table name in the `dm` object
@@ -19,7 +19,7 @@ cdm_test_load <- function(x,
   cdm_table_names <- src_tbls(x)
   if (is_null(db_names)) db_names <- map(cdm_table_names, unique_db_table_name)
 
-  tables <- map(cdm_table_names, ~ tbl(cdm_get_src(x), .x)) %>% set_names(cdm_table_names) # FIXME: should be replaced by `cdm_select_tables()` once it exists
+  tables <- cdm_get_tables(x)
 
   remote_tbls <- map(srcs, ~ copy_list_of_tables_to(src = .x, list_of_tables = tables, name_vector = db_names))
   map2(srcs, remote_tbls, ~ new_dm(.x, .y, cdm_get_data_model(x)))

@@ -32,7 +32,9 @@ clear_postgres <- function() {
 
 test_register_src("df", src_df(env = new_environment()))
 
-try(test_register_src("sqlite", src_sqlite(":memory:", create = TRUE)), silent = TRUE)
+if (packageVersion("RSQLite") >= "2.1.1.9003") {
+  try(test_register_src("sqlite", src_sqlite(":memory:", create = TRUE)), silent = TRUE)
+}
 
 local(try(
   {
@@ -258,8 +260,12 @@ output_3 <- list(
   )
 )
 
-dm_for_filter_rev <- dm_for_filter
-dm_for_filter_rev$tables <- rev(dm_for_filter_rev$tables)
+dm_for_filter_rev <-
+  new_dm(
+    cdm_get_src(dm_for_filter),
+    rev(cdm_get_tables(dm_for_filter)),
+    cdm_get_data_model(dm_for_filter)
+  )
 
 t1_src <- test_load(t1)
 t3_src <- test_load(t3)

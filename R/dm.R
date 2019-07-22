@@ -16,7 +16,7 @@
 #' - [cdm_draw()] for visualization
 #' - [cdm_join_tbl()] for flattening
 #' - [cdm_filter()] for filtering
-#' - [cdm_select()] for creating a `dm` with only a subset of the tables
+#' - [cdm_select_tbl()] for creating a `dm` with only a subset of the tables
 #' - [decompose_table()] as one example of the table surgery family
 #' - [check_key()] and [check_if_subset()] for checking for key properties
 #' - [check_cardinality()] for checking the cardinality of the relation between two tables
@@ -84,6 +84,7 @@ new_dm <- function(src, tables, data_model) {
 #'
 #' `validate_dm()` checks consistency between the \pkg{dplyr} source
 #' and the \pkg{datamodelr} based specification of table relationships.
+#' This function is currently a no-op.
 #'
 #' @param x An object.
 #' @rdname dm
@@ -109,7 +110,7 @@ validate_dm <- function(x) {
 #'
 #' @export
 cdm_get_src <- function(x) {
-  x$src
+  unclass(x)$src
 }
 
 #' Get tables component
@@ -121,7 +122,7 @@ cdm_get_src <- function(x) {
 #'
 #' @export
 cdm_get_tables <- function(x) {
-  x$tables
+  unclass(x)$tables
 }
 
 #' Get data_model component
@@ -133,7 +134,7 @@ cdm_get_tables <- function(x) {
 #'
 #' @export
 cdm_get_data_model <- function(x) {
-  x$data_model
+  unclass(x)$data_model
 }
 
 #' Check class
@@ -207,12 +208,64 @@ print.dm <- function(x, ...) {
 }
 
 
+#' @export
+`$.dm` <- function(x, name) {
+  table <- as_string(name)
+  tbl(x, table)
+}
+
+
+#' @export
+`$<-.dm` <- function(x, name, value) {
+  abort_update_not_supported()
+}
+
+
+#' @export
+`[[.dm` <- function(x, name) {
+  table <- as_string(name)
+  tbl(x, table)
+}
+
+
+#' @export
+`[[<-.dm` <- function(x, name, value) {
+  abort_update_not_supported()
+}
+
+
+#' @export
+`[.dm` <- function(x, name) {
+  tables <- as_character(name)
+  cdm_select_tbl(x, !!!tables)
+}
+
+
+#' @export
+`[<-.dm` <- function(x, name, value) {
+  abort_update_not_supported()
+}
+
+
+#' @export
+names.dm <- function(x) {
+  src_tbls(x)
+}
+
+
+#' @export
+`names<-.dm` <- function(x, value) {
+  abort_update_not_supported()
+}
+
 
 #' @export
 tbl.dm <- function(src, from, ...) {
   # The src argument here is a dm object
   dm <- src
-  dm$tables[[from]]
+  check_correct_input(dm, from)
+
+  cdm_get_tables(dm)[[from]]
 }
 
 
@@ -220,7 +273,7 @@ tbl.dm <- function(src, from, ...) {
 src_tbls.dm <- function(src, ...) {
   # The src argument here is a dm object
   dm <- src
-  names(dm$tables)
+  names(cdm_get_tables(dm))
 }
 
 #' @export

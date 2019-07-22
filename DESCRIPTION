@@ -1,7 +1,7 @@
 Package: dm
 Title: Relational data models
-Version: 0.0.1
-Date: 2019-07-02
+Version: 0.0.1.9000
+Date: 2019-07-16
 Authors@R: 
     c(person(given = "Tobias",
              family = "Schieferdecker",
@@ -39,7 +39,8 @@ Imports:
     shiny,
     stringr,
     tibble,
-    tidyr (>= 0.8.3)
+    tidyr (>= 0.8.3),
+    tidyselect
 Suggests: 
     dbplyr,
     DiagrammeR,
@@ -56,8 +57,7 @@ Suggests:
 Enhances: 
     RPostgres
 Remotes: 
-    bergant/datamodelr,
-    r-dbi/RSQLite
+    bergant/datamodelr
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE, roclets = c("collate",

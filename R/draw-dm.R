@@ -11,6 +11,7 @@
 #' @examples
 #' library(dplyr)
 #' cdm_draw(cdm_nycflights13())
+#' cdm_draw(cdm_nycflights13(cycle = TRUE))
 #'
 #' @export
 cdm_draw <- function(
@@ -61,28 +62,35 @@ cdm_draw <- function(
 #'
 #' @param ... Colors to set in the form `table = "<color>"` . Fall-through syntax similarly to
 #'   [switch()] is supported: `table1 = , table2 = "<color>"` sets the color for both `table1`
-#'   and `table2` .
+#'   and `table2` . This argument supports splicing.
 #' @return For `cdm_set_colors()`: the updated data model.
 #'
 #' @rdname cdm_draw
 #' @examples
-#' cdm_nycflights13() %>%
+#' cdm_nycflights13(color = FALSE) %>%
 #'   cdm_set_colors(
-#'     flights = "blue",
 #'     airports = ,
-#'     airlines = "orange",
-#'     weather = "green",
-#'     planes = "yellow") %>%
+#'     airlines = ,
+#'     planes = "yellow",
+#'     weather = "dark_blue") %>%
 #'     cdm_draw()
 #'
+#' # Splicing is supported:
+#' new_colors <- c(
+#'   airports = "yellow", airlines = "yellow", planes = "yellow",
+#'   weather = "dark_blue"
+#' )
+#' cdm_nycflights13(color = FALSE) %>%
+#'   cdm_set_colors(!!!new_colors) %>%
+#'   cdm_draw()
 #' @export
 cdm_set_colors <- function(dm, ...) {
   data_model <- cdm_get_data_model(dm)
   display <- color_quos_to_display(...)
 
   new_dm(
-    dm$src,
-    dm$tables,
+    cdm_get_src(dm),
+    cdm_get_tables(dm),
     dm_set_display(data_model, display)
   )
 }
@@ -120,7 +128,7 @@ color_quos_to_display <- function(...) {
 #' @export
 cdm_get_colors <- function(dm) h(~ {
     data_model <- cdm_get_data_model(dm)
-    data_model$tables %>%
+    cdm_get_tables(data_model) %>%
       select(table, display) %>%
       as_tibble() %>%
       mutate(color = colors$dm[match(display, colors$datamodelr)]) %>%
